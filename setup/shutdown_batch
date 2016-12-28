@@ -1,0 +1,31 @@
+@echo off
+
+REM remember current path
+for /f %%i in ('cd') do set entry_path=%%i
+REM path of this script
+set this_path=%~d0%~p0
+
+cd /D %this_path%
+
+if not exist bugflux_vars ( 
+    echo No bugflux_vars file! If you lost this file try to recreate it using README.txt
+    goto back_and_exit
+)
+
+for /f "delims=" %%x in (bugflux_vars) do (set "%%x")
+
+
+if not defined nginx_dirname (
+    echo No nginx_dirname defined in bugflux_vars!
+    goto back_and_exit
+)
+
+echo Stopping nginx
+cd nginx\%nginx_dirname%
+nginx.exe -s quit
+
+echo Stopping php-cgi
+taskkill /F /im php-cgi.exe >NUL
+
+cd /D %entry_path%
+exit /b

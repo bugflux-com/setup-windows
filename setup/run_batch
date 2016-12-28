@@ -1,0 +1,45 @@
+@echo off
+
+REM remember current path
+for /f %%i in ('cd') do set entry_path=%%i
+REM path of this script
+set this_path=%~d0%~p0
+
+cd /D %this_path%
+
+if not exist bugflux_vars ( 
+    echo No bugflux_vars file! If you lost this file try to recreate it using README.txt
+    goto back_and_exit
+)
+
+for /f "delims=" %%x in (bugflux_vars) do (set "%%x")
+
+if not defined port_cgi (
+    echo No port_cgi defined in bugflux_vars!
+    goto back_and_exit
+)
+if not defined port_bugflux (
+    echo No port_bugflux defined in bugflux_vars!
+    goto back_and_exit
+)
+if not defined nginx_dirname (
+    echo No nginx_dirname defined in bugflux_vars!
+    goto back_and_exit
+)
+
+echo Starting php-cgi
+cd php 
+RunHiddenConsole.exe "%this_path%\php\php-cgi.exe" -b 127.0.0.1:%port_cgi%
+
+cd ..
+
+echo Starting nginx
+cd nginx\%nginx_dirname%
+start nginx
+
+echo If there were no errors Bugflux should be running on localhost:%port_bugflux%
+echo To shutdown php-cgi and nginx run shutdown_bugflux.bat
+
+:back_and_exit
+    cd /D %entry_path%
+    exit /b
